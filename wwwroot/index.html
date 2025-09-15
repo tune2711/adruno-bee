@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Dashboard</title>
+    <!-- Link to Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+        }
+        .container {
+            margin-top: 2rem;
+        }
+        .table {
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        .glow-header {
+            text-shadow: 0 0 8px rgba(52, 152, 219, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="text-center mb-5">
+            <h1 class="display-4 fw-bold glow-header">Giao Dịch</h1>
+            <p class="lead">Bảng điều khiển giao dịch của bạn</p>
+        </header>
+
+        <div class="card bg-dark border-secondary">
+            <div class="card-header">
+                <h3 class="card-title">Lịch Sử Giao Dịch</h3>
+            </div>
+            <div class="card-body">
+                 <div id="loading" class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Đang tải dữ liệu...</p>
+                </div>
+                <div class="table-responsive">
+                    <table id="transactions-table" class="table table-dark table-striped table-hover" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Số Tiền</th>
+                                <th scope="col">Mô Tả</th>
+                                <th scope="col">Ngân Hàng</th>
+                                <th scope="col">Thời Gian</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to Bootstrap JS (for potential future features) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById('transactions-table');
+            const tableBody = document.getElementById('transactions-body');
+            const loadingIndicator = document.getElementById('loading');
+            const apiUrl = '/api/Transactions';
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    loadingIndicator.style.display = 'none';
+                    table.style.display = 'table';
+                    
+                    if (data.length === 0) {
+                        const row = tableBody.insertRow();
+                        const cell = row.insertCell();
+                        cell.colSpan = 5;
+                        cell.textContent = 'Không có giao dịch nào.';
+                        cell.className = 'text-center';
+                        return;
+                    }
+
+                    data.forEach(transaction => {
+                        const row = tableBody.insertRow();
+                        row.insertCell().textContent = transaction.id;
+                        row.insertCell().textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.amount);
+                        row.insertCell().textContent = transaction.description;
+                        row.insertCell().textContent = transaction.bank;
+                        row.insertCell().textContent = new Date(transaction.timestamp).toLocaleString('vi-VN');
+                    });
+                })
+                .catch(error => {
+                    loadingIndicator.innerHTML = `<div class="alert alert-danger">Failed to load data: ${error.message}</div>`;
+                });
+        });
+    </script>
+
+</body>
+</html>
