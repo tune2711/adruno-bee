@@ -1,3 +1,4 @@
+
 # Blueprint
 
 ## Overview
@@ -13,20 +14,23 @@ The application is a backend service for a transaction notification device. It p
     *   Entity Framework Core with SQLite.
     *   `ApplicationDbContext` to manage data.
     *   `AppUsers` table (from initial setup).
-    *   `Transactions` table to store transaction data.
+    *   `Transactions` table to store transaction data with the following columns: `Id`, `Amount`, `Description`, `Bank`, `Timestamp`, `UserName`.
 *   **API:**
     *   `TransactionsController` at `/api/transactions`.
     *   `GET /api/transactions`: Retrieves all transactions.
     *   `GET /api/transactions/{id}`: Retrieves a specific transaction.
-    *   `POST /api/transactions`: Allows the Arduino device to submit new transactions.
+    *   `POST /api/transactions`: Allows the Arduino device to submit new transactions. It now correctly saves the `userName` provided in the request body.
+*   **Frontend:**
+    *   A simple HTML page (`wwwroot/index.html`) to display the transaction history in a table.
+    *   The table includes a column for the transaction sender, labeled "Người Chuyển Khoản".
 
 ## Current Request
 
-*   **User Goal:** Allow an Arduino-based device to save transaction information to the backend.
+*   **User Goal:** Generate a unique transaction ID for each new transaction with the format `ddMMyyyyxxxxx`.
 *   **AI Plan:**
-    1.  **Create `Transaction` Model:** Define the data structure for a transaction in `Models/Transaction.cs`.
-    2.  **Update `ApplicationDbContext`:** Add a `DbSet<Transaction>` to the context to manage the `Transactions` table.
-    3.  **Create Migration:** Generate a new database migration (`AddTransactionModel`) to update the schema.
-    4.  **Apply Migration:** Update the database with the new `Transactions` table.
-    5.  **Create `TransactionsController`:** Implement API endpoints to handle creating and retrieving transactions.
-    6.  **Update `blueprint.md`:** Document the new features and the plan.
+    1.  **Update `blueprint.md`:** Document the new plan.
+    2.  **Update `Models/Transaction.cs`**: Add a `TransactionId` string property to the `Transaction` model.
+    3.  **Create Migration**: Run `dotnet ef migrations add AddTransactionIdToTransaction` to create the database migration.
+    4.  **Update Database**: Run `dotnet ef database update` to apply the migration.
+    5.  **Update `TransactionsController.cs`**: In the `PostTransaction` method, generate the unique `TransactionId` in the format `ddMMyyyy` followed by 5 random alphanumeric characters and assign it to the new transaction.
+    6.  **Update `wwwroot/index.html`**: Add a "Mã Giao Dịch" column to the table to display the new `TransactionId`.

@@ -44,10 +44,11 @@
                     <table id="transactions-table" class="table table-dark table-striped table-hover" style="display:none;">
                         <thead>
                             <tr>
-                                <th scope="col">ID</th>
+                                <th scope="col">Mã Giao Dịch</th>
                                 <th scope="col">Số Tiền</th>
                                 <th scope="col">Mô Tả</th>
                                 <th scope="col">Ngân Hàng</th>
+                                <th scope="col">Người Chuyển Khoản</th>
                                 <th scope="col">Thời Gian</th>
                             </tr>
                         </thead>
@@ -81,7 +82,7 @@
                     if (data.length === 0) {
                         const row = tableBody.insertRow();
                         const cell = row.insertCell();
-                        cell.colSpan = 5;
+                        cell.colSpan = 6;
                         cell.textContent = 'Không có giao dịch nào.';
                         cell.className = 'text-center';
                         return;
@@ -89,10 +90,11 @@
 
                     data.forEach(transaction => {
                         const row = tableBody.insertRow();
-                        row.insertCell().textContent = transaction.id;
+                        row.insertCell().textContent = transaction.transactionId;
                         row.insertCell().textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(transaction.amount);
                         row.insertCell().textContent = transaction.description;
                         row.insertCell().textContent = transaction.bank;
+                        row.insertCell().textContent = transaction.userName;
                         row.insertCell().textContent = new Date(transaction.timestamp).toLocaleString('vi-VN');
                     });
                 })
