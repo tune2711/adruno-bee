@@ -11,8 +11,8 @@ using myapp.Data;
 namespace myapp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250915113933_AddUserNameToTransaction")]
-    partial class AddUserNameToTransaction
+    [Migration("20250917054445_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,6 +53,9 @@ namespace myapp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TransactionId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserName")

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace myapp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api")]
     [ApiController]
     public class TransactionsController : ControllerBase
     {
@@ -22,13 +22,13 @@ namespace myapp.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("GET")]
         public async Task<ActionResult<IEnumerable<Transaction>>> GetTransactions()
         {
             return await _context.Transactions.OrderByDescending(t => t.Timestamp).ToListAsync();
         }
 
-        [HttpPost]
+        [HttpPost("POST")]
         public async Task<ActionResult<Transaction>> PostTransaction(Transaction transaction)
         {
             var datePart = DateTime.Now.ToString("ddMMyyyy");
@@ -42,13 +42,26 @@ namespace myapp.Controllers
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetTransaction", new { id = transaction.Id }, transaction);
+            return CreatedAtAction("GetTransactions", new { id = transaction.Id }, transaction);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GET/{id}")]
         public async Task<ActionResult<Transaction>> GetTransaction(int id)
         {
-            var transaction = await _context.Transactions.FindAsync(id);
+            var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
+
+            if (transaction == null)
+            {
+                return NotFound();
+            }
+
+            return transaction;
+        }
+
+        [HttpGet("GET/id/{transactionId}")]
+        public async Task<ActionResult<Transaction>> GetTransactionByTransactionId(string transactionId)
+        {
+            var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionId == transactionId);
 
             if (transaction == null)
             {

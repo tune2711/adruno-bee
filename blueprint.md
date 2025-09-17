@@ -16,21 +16,21 @@ The application is a backend service for a transaction notification device. It p
     *   `AppUsers` table (from initial setup).
     *   `Transactions` table to store transaction data with the following columns: `Id`, `Amount`, `Description`, `Bank`, `Timestamp`, `UserName`.
 *   **API:**
-    *   `TransactionsController` at `/api/transactions`.
-    *   `GET /api/transactions`: Retrieves all transactions.
-    *   `GET /api/transactions/{id}`: Retrieves a specific transaction.
-    *   `POST /api/transactions`: Allows the Arduino device to submit new transactions. It now correctly saves the `userName` provided in the request body.
+    *   `TransactionsController` at `/api`.
+    *   `GET /api/GET`: Retrieves all transactions.
+    *   `GET /api/GET/{id}`: Retrieves a specific transaction by its primary key (`Id`).
+    *   `GET /api/GET/id/{transactionId}`: Retrieves a specific transaction by its unique `TransactionId`.
+    *   `POST /api/POST`: Allows the Arduino device to submit new transactions. It now correctly saves the `userName` provided in the request body.
 *   **Frontend:**
     *   A simple HTML page (`wwwroot/index.html`) to display the transaction history in a table.
     *   The table includes a column for the transaction sender, labeled "Người Chuyển Khoản".
 
 ## Current Request
 
-*   **User Goal:** Generate a unique transaction ID for each new transaction with the format `ddMMyyyyxxxxx`.
+*   **User Goal:** Change request URL to be shorter and not include "/Transactions".
 *   **AI Plan:**
-    1.  **Update `blueprint.md`:** Document the new plan.
-    2.  **Update `Models/Transaction.cs`**: Add a `TransactionId` string property to the `Transaction` model.
-    3.  **Create Migration**: Run `dotnet ef migrations add AddTransactionIdToTransaction` to create the database migration.
-    4.  **Update Database**: Run `dotnet ef database update` to apply the migration.
-    5.  **Update `TransactionsController.cs`**: In the `PostTransaction` method, generate the unique `TransactionId` in the format `ddMMyyyy` followed by 5 random alphanumeric characters and assign it to the new transaction.
-    6.  **Update `wwwroot/index.html`**: Add a "Mã Giao Dịch" column to the table to display the new `TransactionId`.
+    1.  **Stop the running application.**
+    2.  **Update `Controllers/TransactionsController.cs`**: Change the routes to `/api/GET`, `/api/POST`, `/api/GET/{id}`, and `/api/GET/id/{transactionId}`.
+    3.  **Update `wwwroot/index.html`**: Update the `fetch` URL to `/api/GET`.
+    4.  **Update `blueprint.md`**: Document the new, shorter API endpoints.
+    5.  **Restart the application.**
