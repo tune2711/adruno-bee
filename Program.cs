@@ -15,7 +15,7 @@ builder.Services.AddCors(options =>
                           policy.WithOrigins(
                                 "http://localhost:5173",                // Standard Vite/React port
                                 "http://localhost:3000",                // Standard create-react-app port
-                                "https://23adc8b91c8d.ngrok-free.app"    // Your ngrok URL
+                                "https://343a5356c607.ngrok-free.app"    // Your ngrok URL
                                )
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();

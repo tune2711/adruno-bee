@@ -7,8 +7,10 @@ namespace myapp.Models
 {
     public class Transaction
     {
-        [Key]
-        public int Id { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public int UserId { get; set; }
+    [Key]
+    public string? TransactionId { get; set; }
 
         public decimal Amount { get; set; }
 
@@ -20,6 +22,5 @@ namespace myapp.Models
         
         public string? UserName { get; set; }
 
-        public string? TransactionId { get; set; }
     }
 }
