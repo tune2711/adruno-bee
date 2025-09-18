@@ -5,6 +5,7 @@ using myapp.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace myapp.Controllers
 {
@@ -103,6 +104,21 @@ namespace myapp.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpDelete("delete-by-email/{email}")]
+        public async Task<IActionResult> DeleteUsersByEmail(string email)
+        {
+            var usersToDelete = _context.AppUsers.Where(u => u.Email == email);
+            if (!usersToDelete.Any())
+            {
+                return NotFound(new { message = "No users found with this email." });
+            }
+
+            _context.AppUsers.RemoveRange(usersToDelete);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"Successfully deleted all users with email {email}." });
         }
 
         private bool UserExists(int id)
