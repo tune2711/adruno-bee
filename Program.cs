@@ -1,6 +1,10 @@
-
-using myapp.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using myapp.Data;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,14 +15,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy  =>
                       {
-                          // Allow specific origins including your ngrok tunnel and common frontend dev ports
                           policy.WithOrigins(
-                                "http://localhost:5173",                // Standard Vite/React port
-                                "http://localhost:3000",                // Standard create-react-app port
-                                "https://343a5356c607.ngrok-free.app"    // Your ngrok URL
+                                "http://localhost:5173",
+                                "http://localhost:3000",
+                                "https://*.ngrok-free.app"
                                )
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
+                                .SetIsOriginAllowedToAllowWildcardSubdomains(); // Allow wildcard subdomains for ngrok
                       });
 });
 
@@ -28,9 +32,57 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Configure JWT Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured"))),
+        RoleClaimType = ClaimTypes.Role
+    };
+});
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+// Add this section to configure Swagger for JWT Authentication
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+
+    // CORRECTED: Use Http type with Bearer scheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http, // Use Http type for Bearer token
+        Scheme = "bearer", // Scheme must be lowercase 'bearer'
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\n\nExample: \"Bearer 12345abcdef\""
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement() {
+        {
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new List<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -51,6 +103,8 @@ app.UseRouting();
 // Apply the CORS policy
 app.UseCors(MyAllowSpecificOrigins);
 
+// Add Authentication middleware BEFORE Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
