@@ -1,8 +1,12 @@
+//
+// File: Program.cs
+//
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using myapp.Data;
+using myapp.Models;
 using System.Security.Claims;
 using System.Text;
 
@@ -22,62 +26,44 @@ builder.Services.AddCors(options =>
                                )
                                 .AllowAnyHeader()
                                 .AllowAnyMethod()
-                                .SetIsOriginAllowedToAllowWildcardSubdomains(); // Allow wildcard subdomains for ngrok
+                                .AllowCredentials()
+                                .SetIsOriginAllowed(origin => true);
                       });
 });
 
-// Add services to the container.
-builder.Services.AddControllers();
 
+// Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure JWT Authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured"))),
-        RoleClaimType = ClaimTypes.Role
-    };
-});
-
-
+builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
-// Add this section to configure Swagger for JWT Authentication
 builder.Services.AddSwaggerGen(c => {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
 
-    // CORRECTED: Use Http type with Bearer scheme
+    // Add JWT Authentication support in Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
-        Type = SecuritySchemeType.Http, // Use Http type for Bearer token
-        Scheme = "bearer", // Scheme must be lowercase 'bearer'
-        BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.\n\nExample: \"Bearer 12345abcdef\""
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement() {
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
         {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
                     Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
-                }
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
             },
             new List<string>()
         }
@@ -93,20 +79,31 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// The order of middleware is crucial.
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// app.UseHttpsRedirection(); // Disabled for local development
 
-// UseRouting must be placed before UseCors and UseAuthorization.
-app.UseRouting();
+app.UseDefaultFiles(); // Look for default files like index.html
+app.UseStaticFiles(); // Serve static files from wwwroot
 
-// Apply the CORS policy
+// 2. Use the CORS policy
 app.UseCors(MyAllowSpecificOrigins);
 
-// Add Authentication middleware BEFORE Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Seed data
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+    if (!db.Products.Any())
+    {
+        db.Products.Add(new Product { Name = "Laptop", Description = "A high-end laptop for professionals.", Price = 1000, Category = "Electronics", ImageUrl = "https://via.placeholder.com/300" });
+        db.Products.Add(new Product { Name = "Mobile", Description = "A modern smartphone with all the latest features.", Price = 500, Category = "Electronics", ImageUrl = "https://via.placeholder.com/300" });
+        db.SaveChanges();
+    }
+}
+
 
 app.Run();
