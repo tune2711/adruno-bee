@@ -33,15 +33,7 @@ namespace myapp.Controllers
         [HttpPost]
         public async Task<ActionResult<AppUser>> PostUser(AppUser appUser)
         {
-            // Set role based on email
-            if (appUser.Email.ToLower() == "admin@gmail.com")
-            {
-                appUser.Role = "admin";
-            }
-            else
-            {
-                appUser.Role = "khách hàng";
-            }
+            // The role is now correctly set from the request body, no need to override it.
 
             // In a real application, you would hash the password before saving.
             _context.AppUsers.Add(appUser);

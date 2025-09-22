@@ -87,21 +87,12 @@ builder.Services.AddSwaggerGen(c => {
 
 var app = builder.Build();
 
-// Seed and CLEAN the database
+// Seed the database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
-
-    // *** TEMPORARY CODE TO FIX THE ADMIN EMAIL ***
-    var adminUser = context.AppUsers.FirstOrDefault(u => u.Email == "admim@gmail.com");
-    if (adminUser != null)
-    {
-        adminUser.Email = "admin@gmail.com";
-        context.SaveChanges();
-    }
-    // *** END OF TEMPORARY CODE ***
 
     if (!context.Products.Any())
     {
