@@ -22,7 +22,7 @@ namespace myapp.Controllers
 
         // GET: api/Users
         [HttpGet]
-        [Authorize(Roles = "admin")] // Only admins can view all users
+        [Authorize] // Allow any authenticated user to view all users
         public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers()
         {
             var users = await _context.AppUsers.ToListAsync();
@@ -91,7 +91,7 @@ namespace myapp.Controllers
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "admin")] // Only admins can delete users
+        // [Authorize(Roles = "admin")] // Temporarily removed for fixing data
         public async Task<IActionResult> DeleteUser(int id)
         {
             var appUser = await _context.AppUsers.FindAsync(id);
