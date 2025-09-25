@@ -64,3 +64,9 @@ artifacts/
 
 # Environment files
 .env
+
+
+# SQLite temporary files
+*.db-shm
+*.db-wal
+*.db.bak

@@ -87,24 +87,6 @@ builder.Services.AddSwaggerGen(c => {
 
 var app = builder.Build();
 
-// Seed the database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ApplicationDbContext>();
-    context.Database.EnsureCreated();
-
-    if (!context.Products.Any())
-    {
-        context.Products.AddRange(
-            new Product { Name = "Laptop", Price = 1200, Description = "A powerful laptop", ImageUrl = "https://via.placeholder.com/150", Category = "Electronics" },
-            new Product { Name = "Mouse", Price = 25, Description = "A wireless mouse", ImageUrl = "https://via.placeholder.com/150", Category = "Accessories" },
-            new Product { Name = "Keyboard", Price = 45, Description = "A mechanical keyboard", ImageUrl = "https://via.placeholder.com/150", Category = "Accessories" }
-        );
-        context.SaveChanges();
-    }
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
