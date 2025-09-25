@@ -19,6 +19,33 @@ namespace myapp.Controllers
             _context = context;
         }
 
+        // GET: api/Orders
+        [HttpGet]
+        [Authorize] // Requires authentication
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
+        {
+            var orders = await _context.Orders
+                                       .Include(o => o.OrderItems)
+                                       .OrderByDescending(o => o.OrderDate)
+                                       .Select(o => new OrderDto
+                                       {
+                                           Id = o.Id,
+                                           CashierEmail = o.CashierEmail,
+                                           OrderDate = o.OrderDate,
+                                           TotalAmount = o.TotalAmount,
+                                           BankingTransactionId = o.BankingTransactionId,
+                                           OrderItems = o.OrderItems.Select(oi => new OrderItemDto
+                                           {
+                                               ProductName = oi.ProductName,
+                                               Quantity = oi.Quantity,
+                                               Price = oi.Price
+                                           }).ToList()
+                                       })
+                                       .ToListAsync();
+
+            return Ok(orders);
+        }
+
         // GET: api/Orders/{id}/receipt
         [HttpGet("{id}/receipt")]
         [AllowAnonymous] // Or use [Authorize] if you want to protect it
@@ -166,5 +193,23 @@ namespace myapp.Controllers
 
             return sb.ToString();
         }
+    }
+
+    // DTOs to prevent circular references and shape the output
+    public class OrderDto
+    {
+        public int Id { get; set; }
+        public string? CashierEmail { get; set; }
+        public DateTime OrderDate { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string? BankingTransactionId { get; set; }
+        public List<OrderItemDto>? OrderItems { get; set; }
+    }
+
+    public class OrderItemDto
+    {
+        public string? ProductName { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
     }
 }
