@@ -9,6 +9,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Always listen on port 5122 unless explicitly overridden by env vars
+builder.WebHost.UseUrls("http://localhost:5122");
+
 // 1. Define a more flexible CORS policy
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
